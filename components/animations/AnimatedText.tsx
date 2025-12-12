@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger);
 }
+
+type TextElementType = "div" | "span" | "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "section" | "article";
 
 interface AnimatedTextProps {
     children: string;
@@ -16,7 +18,7 @@ interface AnimatedTextProps {
     duration?: number;
     delay?: number;
     className?: string;
-    as?: keyof JSX.IntrinsicElements;
+    as?: TextElementType;
     triggerOnScroll?: boolean;
     onComplete?: () => void;
 }
@@ -29,11 +31,12 @@ export function AnimatedText({
     duration = 0.6,
     delay = 0,
     className = "",
-    as: Component = "div",
+    as = "div",
     triggerOnScroll = true,
     onComplete,
 }: AnimatedTextProps) {
-    const containerRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLElement>(null);
+    const Component = as;
     const [isAnimated, setIsAnimated] = useState(false);
 
     useEffect(() => {
@@ -181,14 +184,14 @@ export function AnimatedText({
         };
     }, [children, type, animation, stagger, duration, delay, triggerOnScroll, isAnimated, onComplete]);
 
-    return (
-        <Component
-            ref={containerRef as React.RefObject<HTMLDivElement>}
-            className={`${className}`}
-            style={{ perspective: "1000px" }}
-        >
-            {children}
-        </Component>
+    return React.createElement(
+        Component,
+        {
+            ref: containerRef,
+            className: className,
+            style: { perspective: "1000px" }
+        },
+        children
     );
 }
 
