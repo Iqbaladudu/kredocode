@@ -1,162 +1,256 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import { testimonials, trustedCompanies } from "@/lib/landing-data";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Quote } from "lucide-react";
 import Image from "next/image";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+// Swiper imports
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay, EffectCoverflow } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+
+// Swiper styles
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/effect-coverflow";
+
+if (typeof window !== "undefined") {
+    gsap.registerPlugin(ScrollTrigger);
+}
 
 export function Testimonials() {
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const sectionRef = useRef<HTMLDivElement>(null);
+    const headerRef = useRef<HTMLDivElement>(null);
+    const swiperContainerRef = useRef<HTMLDivElement>(null);
+    const companiesRef = useRef<HTMLDivElement>(null);
+    const swiperRef = useRef<SwiperType | null>(null);
 
-    const next = () => {
-        setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-    };
+    // GSAP Animations
+    useEffect(() => {
+        const section = sectionRef.current;
+        const header = headerRef.current;
+        const swiperContainer = swiperContainerRef.current;
+        const companies = companiesRef.current;
 
-    const prev = () => {
-        setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-    };
+        if (!section || !header || !swiperContainer || !companies) return;
 
-    // Calculate visible cards based on screen size
-    const getVisibleCards = () => {
-        if (typeof window !== 'undefined') {
-            if (window.innerWidth >= 1024) return 3;
-            if (window.innerWidth >= 768) return 2;
-            return 1;
-        }
-        return 1;
-    };
+        const ctx = gsap.context(() => {
+            // Header animation
+            gsap.from(header.children, {
+                y: 50,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.15,
+                ease: "power3.out",
+                scrollTrigger: {
+                    trigger: header,
+                    start: "top 85%",
+                    once: true,
+                },
+            });
+
+            // Swiper container reveal
+            gsap.from(swiperContainer, {
+                y: 60,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out",
+                scrollTrigger: {
+                    trigger: swiperContainer,
+                    start: "top 85%",
+                    once: true,
+                },
+            });
+
+            // Companies animation
+            gsap.from(companies, {
+                y: 40,
+                opacity: 0,
+                duration: 0.8,
+                ease: "power3.out",
+                scrollTrigger: {
+                    trigger: companies,
+                    start: "top 90%",
+                    once: true,
+                },
+            });
+
+            // Company logos stagger
+            const companyLogos = companies.querySelectorAll(".company-logo");
+            gsap.from(companyLogos, {
+                y: 20,
+                opacity: 0,
+                duration: 0.5,
+                stagger: 0.1,
+                ease: "power2.out",
+                scrollTrigger: {
+                    trigger: companies,
+                    start: "top 85%",
+                    once: true,
+                },
+            });
+        }, section);
+
+        return () => ctx.revert();
+    }, []);
 
     return (
-        <div
-            className="w-full py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-10 lg:px-40 bg-[#f6f8f6] dark:bg-[#152111] border-t border-slate-200/80 dark:border-[#2c4724]/60"
+        <section
+            ref={sectionRef}
+            className="w-full py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-10 lg:px-40 bg-[#f6f8f6] dark:bg-[#152111] border-t border-slate-200/80 dark:border-[#2c4724]/60 relative overflow-hidden"
             id="testimonials"
         >
-            <div className="max-w-[1200px] mx-auto">
+            {/* Background Decoration */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-[#49e619]/5 rounded-full blur-[120px]" />
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#49e619]/5 rounded-full blur-[120px]" />
+            </div>
+
+            <div className="max-w-[1200px] mx-auto relative z-10">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 sm:mb-10 md:mb-12 gap-4 sm:gap-6">
+                <div
+                    ref={headerRef}
+                    className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 sm:mb-12 gap-6"
+                >
                     <div className="flex-1 max-w-xl">
-                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2 sm:mb-3 md:mb-4">
-                            Client Testimonials
+                        <span className="inline-block px-4 py-1.5 rounded-full bg-[#49e619]/10 text-[#49e619] text-xs font-bold uppercase tracking-wider mb-4">
+                            Testimonials
+                        </span>
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-3">
+                            Client <span className="text-[#49e619]">Stories</span>
                         </h2>
                         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Trusted by innovative companies worldwide. Here is what they have to say about our collaboration.
+                            Trusted by innovative companies worldwide. Here's what they have
+                            to say about our collaboration.
                         </p>
                     </div>
-                    <div className="flex gap-2 self-start sm:self-auto shrink-0">
+
+                    {/* Navigation Buttons */}
+                    <div className="flex gap-3 self-start sm:self-auto">
                         <button
-                            onClick={prev}
-                            className="size-9 sm:size-10 rounded-full border border-slate-300 dark:border-[#2c4724] flex items-center justify-center hover:bg-white dark:hover:bg-[#20321a] hover:border-[#49e619] active:scale-95 transition-all duration-200 text-slate-600 dark:text-slate-400"
+                            onClick={() => swiperRef.current?.slidePrev()}
+                            className="group size-12 rounded-full border-2 border-slate-300 dark:border-[#2c4724] flex items-center justify-center hover:bg-[#49e619] hover:border-[#49e619] transition-all duration-300 text-slate-600 dark:text-slate-400 hover:text-[#152111]"
                             aria-label="Previous testimonial"
                         >
-                            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
                         </button>
                         <button
-                            onClick={next}
-                            className="size-9 sm:size-10 rounded-full border border-slate-300 dark:border-[#2c4724] flex items-center justify-center hover:bg-white dark:hover:bg-[#20321a] hover:border-[#49e619] active:scale-95 transition-all duration-200 text-slate-600 dark:text-slate-400"
+                            onClick={() => swiperRef.current?.slideNext()}
+                            className="group size-12 rounded-full border-2 border-slate-300 dark:border-[#2c4724] flex items-center justify-center hover:bg-[#49e619] hover:border-[#49e619] transition-all duration-300 text-slate-600 dark:text-slate-400 hover:text-[#152111]"
                             aria-label="Next testimonial"
                         >
-                            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <ChevronRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
                         </button>
                     </div>
                 </div>
 
-                {/* Carousel Indicators - Mobile Only */}
-                <div className="flex sm:hidden justify-center gap-1.5 mb-4">
-                    {testimonials.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => setCurrentIndex(index)}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${index === currentIndex
-                                    ? 'w-6 bg-[#49e619]'
-                                    : 'w-1.5 bg-slate-300 dark:bg-[#2c4724]'
-                                }`}
-                            aria-label={`Go to testimonial ${index + 1}`}
-                        />
-                    ))}
-                </div>
-
-                {/* Testimonials Carousel */}
-                <div className="overflow-hidden pb-4 sm:pb-6 md:pb-8">
-                    <div
-                        className="flex gap-4 sm:gap-5 md:gap-6 transition-transform duration-500 ease-out"
-                        style={{
-                            transform: `translateX(calc(-${currentIndex * 100}% - ${currentIndex * 16}px))`
+                {/* Swiper Testimonials */}
+                <div ref={swiperContainerRef} className="pb-12">
+                    <Swiper
+                        onSwiper={(swiper) => {
+                            swiperRef.current = swiper;
                         }}
+                        modules={[Navigation, Pagination, Autoplay, EffectCoverflow]}
+                        spaceBetween={24}
+                        slidesPerView={1}
+                        loop={true}
+                        autoplay={{
+                            delay: 5000,
+                            disableOnInteraction: false,
+                            pauseOnMouseEnter: true,
+                        }}
+                        pagination={{
+                            clickable: true,
+                            bulletClass: "swiper-pagination-bullet custom-bullet",
+                            bulletActiveClass: "swiper-pagination-bullet-active custom-bullet-active",
+                        }}
+                        breakpoints={{
+                            640: {
+                                slidesPerView: 2,
+                                spaceBetween: 20,
+                            },
+                            1024: {
+                                slidesPerView: 3,
+                                spaceBetween: 24,
+                            },
+                        }}
+                        className="testimonials-swiper"
                     >
                         {testimonials.map((testimonial, index) => (
-                            <div
-                                key={index}
-                                className="min-w-full sm:min-w-[calc(50%-10px)] lg:min-w-[calc(33.333%-16px)] bg-white dark:bg-[#20321a] p-5 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-[#2c4724] shadow-sm hover:shadow-md dark:shadow-none hover:border-[#49e619]/30 transition-all duration-300 flex flex-col justify-between relative"
-                            >
-                                {/* Quote Mark */}
-                                <div className="absolute top-3 sm:top-4 md:top-5 left-4 sm:left-5 md:left-6 text-4xl sm:text-5xl md:text-6xl text-[#49e619]/15 font-serif select-none leading-none">
-                                    "
-                                </div>
+                            <SwiperSlide key={index}>
+                                <div className="testimonial-card group bg-white dark:bg-[#20321a] p-6 sm:p-8 rounded-2xl border border-slate-200 dark:border-[#2c4724] hover:border-[#49e619]/50 transition-all duration-500 flex flex-col justify-between h-full min-h-[320px] relative cursor-grab active:cursor-grabbing">
+                                    {/* Hover Glow */}
+                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-[#49e619]/0 to-[#49e619]/0 group-hover:from-[#49e619]/10 group-hover:to-transparent rounded-2xl blur-lg transition-all duration-500 -z-10" />
 
-                                <div className="relative z-10">
-                                    {/* Stars */}
-                                    <div className="flex text-yellow-400 mb-4 sm:mb-5 md:mb-6 gap-0.5">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
-                                        ))}
+                                    {/* Quote Icon */}
+                                    <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+                                        <Quote className="w-8 h-8 sm:w-10 sm:h-10 text-[#49e619]/20 group-hover:text-[#49e619]/40 transition-colors duration-300" />
                                     </div>
 
-                                    {/* Quote */}
-                                    <p className="text-slate-700 dark:text-slate-300 text-sm sm:text-base md:text-lg mb-6 sm:mb-7 md:mb-8 leading-relaxed line-clamp-4 sm:line-clamp-none">
-                                        {testimonial.quote}
-                                    </p>
-                                </div>
+                                    <div className="relative z-10 flex-1">
+                                        {/* Stars */}
+                                        <div className="flex text-yellow-400 mb-6 gap-1">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star
+                                                    key={i}
+                                                    className="w-5 h-5 fill-current"
+                                                />
+                                            ))}
+                                        </div>
 
-                                {/* Author */}
-                                <div className="flex items-center gap-3 sm:gap-4 border-t border-slate-100 dark:border-[#2c4724]/60 pt-4 sm:pt-5 md:pt-6 mt-auto">
-                                    <div className="size-10 sm:size-11 md:size-12 rounded-full bg-slate-200 overflow-hidden shrink-0 ring-2 ring-white dark:ring-[#152111]">
-                                        <Image
-                                            src={testimonial.avatar}
-                                            alt={testimonial.name}
-                                            width={48}
-                                            height={48}
-                                            className="object-cover w-full h-full"
-                                        />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h4 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate">
-                                            {testimonial.name}
-                                        </h4>
-                                        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">
-                                            {testimonial.title}
+                                        {/* Quote */}
+                                        <p className="text-slate-700 dark:text-slate-300 text-base sm:text-lg mb-8 leading-relaxed italic">
+                                            "{testimonial.quote}"
                                         </p>
                                     </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
 
-                {/* Pagination Dots - Tablet & Desktop */}
-                <div className="hidden sm:flex justify-center gap-2 mt-2">
-                    {testimonials.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => setCurrentIndex(index)}
-                            className={`h-2 rounded-full transition-all duration-300 ${index === currentIndex
-                                    ? 'w-8 bg-[#49e619]'
-                                    : 'w-2 bg-slate-300 dark:bg-[#2c4724] hover:bg-slate-400 dark:hover:bg-[#3d5a33]'
-                                }`}
-                            aria-label={`Go to testimonial ${index + 1}`}
-                        />
-                    ))}
+                                    {/* Author */}
+                                    <div className="flex items-center gap-4 border-t border-slate-100 dark:border-[#2c4724]/60 pt-6 mt-auto">
+                                        <div className="relative">
+                                            <div className="size-14 rounded-full bg-slate-200 overflow-hidden ring-2 ring-white dark:ring-[#152111] group-hover:ring-[#49e619]/30 transition-all duration-300">
+                                                <Image
+                                                    src={testimonial.avatar}
+                                                    alt={testimonial.name}
+                                                    width={56}
+                                                    height={56}
+                                                    className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                                                />
+                                            </div>
+                                            {/* Online indicator */}
+                                            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#49e619] border-2 border-white dark:border-[#20321a]" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-[#49e619] transition-colors duration-300">
+                                                {testimonial.name}
+                                            </h4>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                                {testimonial.title}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
                 </div>
 
                 {/* Trusted Companies */}
-                <div className="mt-12 sm:mt-14 md:mt-16 pt-8 sm:pt-10 md:pt-12 border-t border-slate-200/50 dark:border-[#2c4724]/30">
-                    <p className="text-center text-xs sm:text-sm text-slate-500 dark:text-slate-500 mb-6 sm:mb-8 uppercase tracking-wider font-medium">
+                <div
+                    ref={companiesRef}
+                    className="mt-8 pt-12 border-t border-slate-200/50 dark:border-[#2c4724]/30"
+                >
+                    <p className="text-center text-xs sm:text-sm text-slate-500 dark:text-slate-500 mb-8 uppercase tracking-wider font-medium">
                         Trusted by leading companies
                     </p>
-                    <div className="flex flex-wrap justify-center items-center gap-x-6 sm:gap-x-8 md:gap-x-10 lg:gap-x-12 gap-y-4 sm:gap-y-6">
+                    <div className="flex flex-wrap justify-center items-center gap-x-8 md:gap-x-12 lg:gap-x-16 gap-y-6">
                         {trustedCompanies.map((company, index) => (
                             <div
                                 key={index}
-                                className="text-base sm:text-lg md:text-xl font-bold text-slate-400/80 dark:text-slate-500/80 hover:text-[#49e619] dark:hover:text-[#49e619] transition-colors duration-300 cursor-default"
+                                className="company-logo text-lg sm:text-xl md:text-2xl font-bold text-slate-400/70 dark:text-slate-500/70 hover:text-[#49e619] dark:hover:text-[#49e619] transition-all duration-300 cursor-pointer hover:scale-110"
                             >
                                 {company}
                             </div>
@@ -164,6 +258,42 @@ export function Testimonials() {
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Custom Swiper Styles */}
+            <style jsx global>{`
+        .testimonials-swiper {
+          padding-bottom: 50px !important;
+        }
+        
+        .testimonials-swiper .swiper-pagination {
+          bottom: 0 !important;
+        }
+        
+        .custom-bullet {
+          width: 10px !important;
+          height: 10px !important;
+          background: #2c4724 !important;
+          opacity: 0.5 !important;
+          border-radius: 50% !important;
+          transition: all 0.3s ease !important;
+          margin: 0 6px !important;
+        }
+        
+        .custom-bullet-active {
+          width: 32px !important;
+          border-radius: 5px !important;
+          background: #49e619 !important;
+          opacity: 1 !important;
+        }
+        
+        .testimonials-swiper .swiper-slide {
+          height: auto !important;
+        }
+        
+        .testimonials-swiper .swiper-slide > div {
+          height: 100%;
+        }
+      `}</style>
+        </section>
     );
 }

@@ -45,7 +45,7 @@ export const services = [
 
 export const testimonials = [
     {
-        quote: "SoftwareHouse delivered a scalable solution that completely transformed our workflow. The attention to detail was impressive.",
+        quote: "KredoCode delivered a scalable solution that completely transformed our workflow. The attention to detail was impressive.",
         name: "Jonathan Lee",
         title: "CTO, Nexus Corp",
         avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
@@ -57,10 +57,28 @@ export const testimonials = [
         avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
     },
     {
-        quote: "We've worked with many agencies, but SoftwareHouse stands out. They truly understand enterprise requirements.",
+        quote: "We've worked with many agencies, but KredoCode stands out. They truly understand enterprise requirements.",
         name: "Michael Chen",
         title: "Director, Orbit Systems",
         avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
+    },
+    {
+        quote: "The team's expertise in AI and machine learning helped us build a predictive model that increased our conversion rate by 40%.",
+        name: "Sarah Johnson",
+        title: "CEO, DataFlow Inc",
+        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
+    },
+    {
+        quote: "Outstanding mobile app development. Our users love the intuitive design and the app runs flawlessly on both iOS and Android.",
+        name: "David Park",
+        title: "Founder, FitTrack",
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
+    },
+    {
+        quote: "From concept to deployment, KredoCode was professional and responsive. They delivered our e-commerce platform ahead of schedule.",
+        name: "Amanda Foster",
+        title: "COO, StyleHub",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
     },
 ];
 
