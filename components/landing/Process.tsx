@@ -1,267 +1,243 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { processSteps } from "@/lib/landing-data";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+import { cn } from "@/lib/utils";
 
 if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger);
 }
 
 export function Process() {
-    const sectionRef = useRef<HTMLDivElement>(null);
-    const titleRef = useRef<HTMLHeadingElement>(null);
-    const lineRef = useRef<HTMLDivElement>(null);
-    const stepsRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const indicatorRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const section = sectionRef.current;
-        const title = titleRef.current;
-        const line = lineRef.current;
-        const steps = stepsRef.current;
+    useGSAP(() => {
+        const steps = gsap.utils.toArray<HTMLElement>(".process-step-card");
+        const indicators = gsap.utils.toArray<HTMLElement>(".process-indicator");
+        const totalSteps = steps.length;
+        
+        let mm = gsap.matchMedia();
 
-        if (!section || !title || !steps) return;
+        mm.add({
+            // Desktop
+            isDesktop: "(min-width: 768px)",
+            // Mobile
+            isMobile: "(max-width: 767px)",
+        }, (context) => {
+            const { isDesktop, isMobile } = context.conditions as { isDesktop: boolean; isMobile: boolean };
 
-        const ctx = gsap.context(() => {
-            // Title animation
-            gsap.from(title, {
-                y: 50,
-                opacity: 0,
-                duration: 0.8,
-                ease: "power3.out",
-                scrollTrigger: {
-                    trigger: title,
-                    start: "top 85%",
-                    once: true,
-                },
-            });
-
-            // Connection line animation
-            if (line) {
-                gsap.fromTo(
-                    line,
-                    { scaleX: 0 },
-                    {
-                        scaleX: 1,
-                        duration: 1.5,
-                        ease: "power2.inOut",
-                        scrollTrigger: {
-                            trigger: steps,
-                            start: "top 75%",
-                            once: true,
-                        },
+            // SHARED / DESKTOP SETUP
+            if (isDesktop) {
+                // ... Existing Desktop Logic ...
+                const tl = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: containerRef.current,
+                        start: "top top",
+                        end: `+=${totalSteps * 100}%`,
+                        pin: true,
+                        scrub: 1,
                     }
-                );
+                });
+
+                // Initial states
+                gsap.set(steps.slice(1), { yPercent: 120, opacity: 0, scale: 0.9, rotationX: 10 });
+                gsap.set(steps[0], { yPercent: 0, opacity: 1, scale: 1, rotationX: 0 });
+
+                steps.forEach((step, i) => {
+                    if (i === 0) return; 
+                    const prevStep = steps[i-1];
+                    
+                    tl.to(prevStep, {
+                        scale: 0.9, opacity: 0, filter: "blur(10px)", duration: 1, ease: "power2.inOut"
+                    }, `step-${i}`);
+
+                    tl.to(step, {
+                        yPercent: 0, opacity: 1, scale: 1, rotationX: 0, duration: 1, ease: "power2.out"
+                    }, `step-${i}`);
+                    
+                    // Desktop Indicator Logic
+                    const currentInd = indicators[i];
+                    tl.to(currentInd, { opacity: 1, duration: 0.5 }, `step-${i}`);
+                    tl.to(currentInd.querySelector(".indicator-circle"), { 
+                        backgroundColor: "#000", color: "#fff", borderColor: "#000", scale: 1.1, duration: 0.5 
+                    }, `step-${i}`);
+                    tl.to(currentInd.querySelector(".indicator-text"), { color: "#000", duration: 0.5 }, `step-${i}`);
+
+                    if (i > 0) {
+                         const prevInd = indicators[i-1];
+                         tl.to(prevInd, { opacity: 0.3, duration: 0.5 }, `step-${i}`);
+                         tl.to(prevInd.querySelector(".indicator-circle"), { 
+                             backgroundColor: "transparent", color: "#94a3b8", borderColor: "#cbd5e1", scale: 1, duration: 0.5 
+                         }, `step-${i}`);
+                         tl.to(prevInd.querySelector(".indicator-text"), { color: "#94a3b8", duration: 0.5 }, `step-${i}`);
+                    }
+                    
+                    // Line Progress
+                    const totalProgressHeight = ((i) / (totalSteps - 1)) * 100;
+                     gsap.to(".progress-fill", {
+                         height: `${totalProgressHeight}%`,
+                         ease: "none",
+                         scrollTrigger: {
+                            trigger: containerRef.current,
+                            start: "top top",
+                            end: `+=${totalSteps * 100}%`,
+                            scrub: 1
+                         }
+                    });
+                });
+                
+                // Initial Active
+                const firstInd = indicators[0];
+                gsap.set(firstInd, { opacity: 1 });
+                gsap.set(firstInd.querySelector(".indicator-circle"), { backgroundColor: "#000", color: "#fff", borderColor: "#000", scale: 1.1 });
+                gsap.set(firstInd.querySelector(".indicator-text"), { color: "#000" });
             }
 
-            // Steps animation with stagger
-            const stepElements = steps.querySelectorAll(".process-step");
-
-            gsap.from(stepElements, {
-                y: 80,
-                opacity: 0,
-                scale: 0.9,
-                duration: 0.8,
-                stagger: 0.2,
-                ease: "power3.out",
-                scrollTrigger: {
-                    trigger: steps,
-                    start: "top 80%",
-                    once: true,
-                },
-            });
-
-            // Icon circle animation
-            const iconCircles = steps.querySelectorAll(".icon-circle");
-
-            gsap.from(iconCircles, {
-                scale: 0,
-                rotation: -180,
-                duration: 0.8,
-                stagger: 0.2,
-                ease: "back.out(1.7)",
-                scrollTrigger: {
-                    trigger: steps,
-                    start: "top 80%",
-                    once: true,
-                },
-            });
-
-            // Number badges pop animation
-            const numberBadges = steps.querySelectorAll(".number-badge");
-
-            gsap.from(numberBadges, {
-                scale: 0,
-                duration: 0.5,
-                stagger: 0.2,
-                delay: 0.3,
-                ease: "back.out(2)",
-                scrollTrigger: {
-                    trigger: steps,
-                    start: "top 80%",
-                    once: true,
-                },
-            });
-
-            // Continuous floating animation for icons
-            iconCircles.forEach((circle, index) => {
-                gsap.to(circle, {
-                    y: -8,
-                    duration: 2 + index * 0.3,
-                    repeat: -1,
-                    yoyo: true,
-                    ease: "sine.inOut",
-                    delay: index * 0.2,
-                });
-            });
-
-            // Hover effects
-            stepElements.forEach((step) => {
-                step.addEventListener("mouseenter", () => {
-                    gsap.to(step, {
-                        y: -10,
-                        duration: 0.3,
-                        ease: "power2.out",
-                    });
-
-                    const circle = step.querySelector(".icon-circle");
-                    if (circle) {
-                        gsap.to(circle, {
-                            scale: 1.1,
-                            boxShadow: "0 0 40px rgba(73, 230, 25, 0.4)",
-                            duration: 0.3,
-                        });
+            // MOBILE SETUP
+            if (isMobile) {
+                // Mobile Animation: Simpler stacking, no sidebar pinning
+                // We pin the container but the layout is different
+                const tl = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: containerRef.current,
+                        start: "top top", // Lock when top of section hits top of view
+                        end: `+=${totalSteps * 80}%`, // Shorter scroll for mobile
+                        pin: true,
+                        scrub: 0.5, // Faster scrub for mobile feel
                     }
                 });
+                
+                // Initial states for mobile
+                gsap.set(steps.slice(1), { yPercent: 120, opacity: 1, scale: 0.95 }); // Less opacity fade, more slide
+                gsap.set(steps[0], { yPercent: 0, opacity: 1, scale: 1 });
 
-                step.addEventListener("mouseleave", () => {
-                    gsap.to(step, {
-                        y: 0,
-                        duration: 0.4,
-                        ease: "elastic.out(1, 0.5)",
-                    });
+                steps.forEach((step, i) => {
+                    if (i === 0) return;
+                    const prevStep = steps[i-1];
 
-                    const circle = step.querySelector(".icon-circle");
-                    if (circle) {
-                        gsap.to(circle, {
-                            scale: 1,
-                            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-                            duration: 0.3,
-                        });
-                    }
+                    // Mobile Stacking
+                    tl.to(prevStep, {
+                        scale: 0.9, opacity: 0.5, filter: "blur(5px)", duration: 1
+                    }, `step-${i}`);
+
+                    tl.to(step, {
+                        yPercent: 0, scale: 1, duration: 1, ease: "power2.out"
+                    }, `step-${i}`);
+                    
+                    // Mobile Indicator (Simple counter or bar) update could go here if implemented in DOM
                 });
-            });
-        }, section);
+            }
+        });
 
-        return () => ctx.revert();
-    }, []);
+        return () => mm.revert();
+    }, { scope: containerRef });
 
     return (
-        <section
-            ref={sectionRef}
-            className="w-full py-24 px-4 md:px-10 lg:px-40 bg-[#f6f8f6] dark:bg-[#152111] border-t border-slate-200 dark:border-[#2c4724]/30 relative overflow-hidden"
+        <section 
+            className="w-full bg-white relative" 
             id="process"
         >
-            {/* Background Decorations */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-64 h-64 bg-[#49e619]/5 rounded-full blur-[100px]" />
-                <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-[#49e619]/5 rounded-full blur-[100px]" />
-            </div>
-
-            <div className="max-w-[1200px] mx-auto text-center relative z-10">
-                {/* Header */}
-                <div className="mb-16">
-                    <span className="inline-block px-4 py-1.5 rounded-full bg-[#49e619]/10 text-[#49e619] text-xs font-bold uppercase tracking-wider mb-4">
-                        Our Process
+            <div ref={containerRef} className="min-h-screen w-full flex flex-col md:flex-row max-w-[1600px] mx-auto px-4 md:px-10 lg:px-20 overflow-hidden relative">
+                
+                {/* HEADLINE: Mobile Only (Scrolls away or stays top?) -> Let's keep it part of flow but styled for mobile */}
+                <div className="md:hidden pt-8 pb-4 relative z-20">
+                    <span className="text-black text-xs font-bold uppercase tracking-wider block mb-2">
+                        How We Work
                     </span>
-                    <h2
-                        ref={titleRef}
-                        className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white"
-                    >
-                        How We <span className="text-[#49e619]">Work</span>
+                    <h2 className="text-4xl font-bold text-slate-900 leading-tight">
+                        Our Proven Process
                     </h2>
                 </div>
 
-                <div ref={stepsRef} className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-                    {/* Connection Line */}
-                    <div
-                        ref={lineRef}
-                        className="hidden md:block absolute top-12 left-[16%] right-[16%] h-1 bg-gradient-to-r from-transparent via-[#49e619] to-transparent z-0 origin-left"
-                    >
-                        {/* Animated dots on line */}
-                        <div className="absolute inset-0 flex justify-around items-center">
-                            {[...Array(3)].map((_, i) => (
-                                <div
-                                    key={i}
-                                    className="w-2 h-2 rounded-full bg-[#49e619] animate-pulse"
-                                    style={{ animationDelay: `${i * 0.3}s` }}
-                                />
-                            ))}
+                {/* LEFT COLUMN: Desktop Only Indicators */}
+                <div className="hidden md:flex md:w-1/3 flex-col justify-center h-full relative z-20 py-12 pl-4">
+                    <span className="text-black text-sm font-bold uppercase tracking-wider mb-8">
+                        How We Work
+                    </span>
+                    <h2 className="text-5xl md:text-6xl font-bold text-slate-900 mb-16 leading-[1.1] tracking-tighter">
+                        Our Proven <br/>
+                        <span className="text-slate-300">Process.</span>
+                    </h2>
+
+                    {/* Lateral Indicators */}
+                    <div ref={indicatorRef} className="flex flex-col gap-10 relative pl-4">
+                        <div className="absolute left-[27px] top-6 bottom-6 w-[2px] bg-slate-100">
+                             <div className="progress-fill w-full bg-black h-0 origin-top" />
                         </div>
-                    </div>
-
-                    {processSteps.map((step, index) => (
-                        <div
-                            key={step.number}
-                            className="process-step relative z-10 flex flex-col items-center cursor-pointer"
-                        >
-                            {/* Icon Circle */}
-                            <div className="icon-circle relative size-28 rounded-full bg-slate-100 dark:bg-[#20321a] border-4 border-white dark:border-[#152111] shadow-2xl flex items-center justify-center mb-6 group">
-                                {/* Glow effect */}
-                                <div className="absolute inset-0 rounded-full bg-[#49e619]/0 group-hover:bg-[#49e619]/20 blur-xl transition-all duration-300" />
-
-                                {/* Icon */}
-                                <span className="text-5xl transform group-hover:scale-110 transition-transform duration-300">
-                                    {step.icon}
-                                </span>
-
-                                {/* Number Badge */}
-                                <div className="number-badge absolute -top-2 -right-2 size-10 bg-[#49e619] rounded-full flex items-center justify-center text-[#152111] font-bold text-lg shadow-lg">
-                                    {step.number}
+                        {processSteps.map((step, index) => (
+                            <div key={index} className="process-indicator flex items-center gap-6 text-slate-400 transition-all duration-300 opacity-30 z-10 cursor-pointer">
+                                <div className="indicator-circle w-12 h-12 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center text-sm font-bold transition-all duration-500">
+                                    0{index + 1}
                                 </div>
-
-                                {/* Rotating ring */}
-                                <div
-                                    className="absolute inset-0 rounded-full border-2 border-dashed border-[#49e619]/30 animate-spin-slow"
-                                    style={{
-                                        animationDuration: '20s',
-                                        animationDelay: `${index * 0.5}s`
-                                    }}
-                                />
+                                <span className="indicator-text text-2xl font-bold tracking-tight transition-all duration-500">
+                                    {step.title}
+                                </span>
                             </div>
+                        ))}
+                    </div>
+                </div>
 
-                            {/* Content */}
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-[#49e619] transition-colors">
-                                {step.title}
-                            </h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
-                                {step.description}
-                            </p>
-
-                            {/* Mobile connector */}
-                            {index < processSteps.length - 1 && (
-                                <div className="md:hidden w-0.5 h-8 bg-gradient-to-b from-[#49e619] to-transparent mt-6" />
+                {/* RIGHT COLUMN: Stacking Cards (Desktop & Mobile) */}
+                {/* On mobile, this takes full width/height. On Desktop, it's 2/3 */}
+                <div ref={wrapperRef} className="w-full md:w-2/3 h-[60vh] md:h-full relative flex items-center justify-center perspective-[2000px] mt-4 md:mt-0">
+                    {processSteps.map((step, index) => (
+                        <div 
+                            key={index}
+                            className={cn(
+                                "process-step-card absolute w-full md:max-w-2xl bg-[#0a0a0a] rounded-[2rem] border border-white/10 shadow-2xl p-6 md:p-14 flex flex-col justify-between origin-bottom",
+                                // Mobile Height Adjustment
+                                "h-[50vh] min-h-[400px] md:h-[600px]" 
                             )}
+                            style={{ 
+                                zIndex: index + 10,
+                                top: "50%",
+                                left: "50%",
+                                transform: "translate(-50%, -50%)" 
+                            }}
+                        >
+                            {/* Card Header */}
+                            <div className="flex justify-between items-start mb-4 md:mb-0">
+                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-white/10 border border-white/10 text-white flex items-center justify-center text-2xl md:text-3xl backdrop-blur-md">
+                                    {step.icon}
+                                </div>
+                                <div className="text-right">
+                                    <span className="block text-[10px] md:text-xs font-bold uppercase tracking-widest text-white/40 mb-1">Step</span>
+                                    <span className="block text-4xl md:text-5xl font-black text-white leading-none">0{index + 1}</span>
+                                </div>
+                            </div>
+                            
+                            {/* Card Content */}
+                            <div className="flex-1 flex flex-col justify-center">
+                                <h3 className="text-2xl md:text-5xl font-bold text-white mb-4 md:mb-6 tracking-tight">
+                                    {step.title}
+                                </h3>
+                                <p className="text-base md:text-xl text-white/60 leading-relaxed font-normal line-clamp-4 md:line-clamp-none">
+                                    {step.description}
+                                </p>
+                            </div>
+                            
+                            {/* Card Footer */}
+                            <div className="pt-6 md:pt-8 border-t border-white/10 mt-auto">
+                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-white/40 mb-3 block">Key Deliverables</span>
+                                <div className="flex flex-wrap gap-2">
+                                    {(index === 0 ? ["Market Analysis", "User Personas", "Roadmap"] : 
+                                      index === 1 ? ["UI/UX Design", "Frontend Dev", "API Integration"] : 
+                                      ["QA Testing", "Cloud Deploy", "Monitoring"]).map((tag, i) => (
+                                        <span key={i} className="px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/5 border border-white/10 text-xs md:text-sm font-medium text-white/80 whitespace-nowrap">
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
             </div>
-
-            {/* Custom animation keyframes */}
-            <style jsx>{`
-        @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 20s linear infinite;
-        }
-      `}</style>
         </section>
     );
 }

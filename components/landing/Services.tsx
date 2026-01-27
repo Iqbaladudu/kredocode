@@ -1,112 +1,109 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, MouseEvent } from "react";
 import { services } from "@/lib/landing-data";
-import { ArrowRight, ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { cn } from "@/lib/utils";
 
 if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger);
 }
 
-// Extended service data with colors and tags
-const extendedServices = services.map((service, index) => ({
-    ...service,
-    color: [
-        "#49e619", // Fullstack Dev - Brand Green
-        "#3b82f6", // Mobile Apps - Blue
-        "#8b5cf6", // Desktop Apps - Purple
-        "#f59e0b", // AI & ML - Amber
-        "#06b6d4", // IoT Solutions - Cyan
-        "#ec4899", // E-commerce - Pink
-        "#10b981", // LMS Platforms - Emerald
-        "#f97316", // Travel Systems - Orange
-    ][index],
-    tags: [
-        ["React", "Node.js", "Python"],
-        ["iOS", "Android", "Flutter"],
-        ["Electron", "Qt", "Native"],
-        ["TensorFlow", "PyTorch", "OpenAI"],
-        ["Arduino", "MQTT", "Edge"],
-        ["Shopify", "WooCommerce", "Custom"],
-        ["Moodle", "Canvas", "Custom"],
-        ["API", "PMS", "GDS"],
-    ][index],
-    stat: [
-        "150+ Projects",
-        "50+ Apps",
-        "30+ Software",
-        "25+ Models",
-        "40+ Devices",
-        "100+ Stores",
-        "20+ Platforms",
-        "35+ Systems",
-    ][index],
-}));
+// 3D Tilt Card Component
+function TiltCard({ children, className, isDark }: { children: React.ReactNode; className?: string; isDark?: boolean }) {
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+        const card = cardRef.current;
+        if (!card) return;
+
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const rotateX = ((y - centerY) / centerY) * -5; // Max 5deg rotation
+        const rotateY = ((x - centerX) / centerX) * 5;
+
+        gsap.to(card, {
+            rotationX: rotateX,
+            rotationY: rotateY,
+            scale: 1.02,
+            duration: 0.4,
+            ease: "power2.out",
+            transformPerspective: 1000,
+        });
+    };
+
+    const handleMouseLeave = () => {
+        const card = cardRef.current;
+        if (!card) return;
+
+        gsap.to(card, {
+            rotationX: 0,
+            rotationY: 0,
+            scale: 1,
+            duration: 0.4,
+            ease: "power2.out",
+        });
+    };
+
+    return (
+        <div 
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className={cn(
+                "group relative rounded-[2rem] p-8 md:p-10 border overflow-hidden transition-colors duration-500", // Increased padding/rounding
+                isDark 
+                    ? "bg-[#0c0c0c] border-white/10 text-white" 
+                    : "bg-white border-slate-200 text-slate-900",
+                className
+            )}
+            style={{ transformStyle: "preserve-3d" }}
+        >
+            {/* Gloss/Noise Effect Overlay */}
+            {isDark && (
+                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-soft-light" />
+            )}
+            
+            {/* Gradient Hover Effect */}
+            <div className={cn(
+                "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
+                isDark 
+                    ? "bg-gradient-to-br from-white/10 to-transparent" 
+                    : "bg-gradient-to-br from-slate-100 to-white"
+            )} />
+
+            <div className="relative z-10 h-full flex flex-col justify-between transform transition-transform duration-300 group-hover:translate-z-10" style={{ transform: "translateZ(20px)" }}>
+                {children}
+            </div>
+        </div>
+    );
+}
 
 export function Services() {
     const sectionRef = useRef<HTMLDivElement>(null);
-    const headerRef = useRef<HTMLDivElement>(null);
     const gridRef = useRef<HTMLDivElement>(null);
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    const [activeCard, setActiveCard] = useState<number | null>(null);
-
-    // Handle mouse move for spotlight effect
-    const handleMouseMove = (e: React.MouseEvent, index: number) => {
-        const card = e.currentTarget as HTMLElement;
-        const rect = card.getBoundingClientRect();
-        setMousePosition({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-        });
-        setActiveCard(index);
-    };
 
     useEffect(() => {
         const section = sectionRef.current;
-        const header = headerRef.current;
         const grid = gridRef.current;
 
-        if (!section || !header || !grid) return;
+        if (!section || !grid) return;
 
         const ctx = gsap.context(() => {
-            // Header animation with text reveal
-            const headerElements = header.querySelectorAll(".header-anim");
-            gsap.from(headerElements, {
+            const items = grid.children;
+            
+            gsap.from(items, {
                 y: 80,
                 opacity: 0,
                 duration: 1,
-                stagger: 0.15,
-                ease: "power4.out",
-                scrollTrigger: {
-                    trigger: header,
-                    start: "top 85%",
-                    once: true,
-                },
-            });
-
-            // Grid cards with advanced stagger pattern
-            const cards = grid.querySelectorAll(".service-card");
-
-            // Set initial state for 3D transforms
-            gsap.set(cards, {
-                transformPerspective: 1200,
-                transformOrigin: "center center",
-            });
-
-            // Stagger animation from center
-            gsap.from(cards, {
-                y: 100,
-                opacity: 0,
-                scale: 0.85,
-                rotationX: -25,
-                duration: 1,
-                stagger: {
-                    amount: 0.8,
-                    from: "center",
-                    grid: [2, 4],
-                },
+                stagger: 0.1,
                 ease: "power3.out",
                 scrollTrigger: {
                     trigger: grid,
@@ -114,354 +111,90 @@ export function Services() {
                     once: true,
                 },
             });
-
-            // Icon animations
-            const icons = grid.querySelectorAll(".service-icon");
-            gsap.from(icons, {
-                scale: 0,
-                rotation: -180,
-                duration: 0.8,
-                stagger: {
-                    amount: 0.6,
-                    from: "center",
-                },
-                ease: "back.out(1.7)",
-                delay: 0.3,
-                scrollTrigger: {
-                    trigger: grid,
-                    start: "top 85%",
-                    once: true,
-                },
-            });
-
-            // Tags animation
-            const tags = grid.querySelectorAll(".service-tag");
-            gsap.from(tags, {
-                x: -20,
-                opacity: 0,
-                duration: 0.5,
-                stagger: 0.03,
-                delay: 0.5,
-                ease: "power2.out",
-                scrollTrigger: {
-                    trigger: grid,
-                    start: "top 85%",
-                    once: true,
-                },
-            });
-
-            // Cards are now static - no floating animation
-
-            // Card hover animations
-            cards.forEach((card) => {
-                const cardEl = card as HTMLElement;
-                const iconContainer = cardEl.querySelector(".icon-container");
-                const arrowBtn = cardEl.querySelector(".arrow-btn");
-                const statEl = cardEl.querySelector(".stat-badge");
-
-                cardEl.addEventListener("mouseenter", () => {
-                    gsap.to(cardEl, {
-                        scale: 1.02,
-                        boxShadow: "0 25px 50px -12px rgba(73, 230, 25, 0.15)",
-                        duration: 0.4,
-                        ease: "power2.out",
-                    });
-
-                    if (iconContainer) {
-                        gsap.to(iconContainer, {
-                            scale: 1.15,
-                            rotation: 5,
-                            duration: 0.4,
-                            ease: "back.out(1.5)",
-                        });
-                    }
-
-                    if (arrowBtn) {
-                        gsap.to(arrowBtn, {
-                            x: 0,
-                            opacity: 1,
-                            duration: 0.3,
-                            ease: "power2.out",
-                        });
-                    }
-
-                    if (statEl) {
-                        gsap.to(statEl, {
-                            scale: 1.05,
-                            duration: 0.3,
-                        });
-                    }
-                });
-
-                cardEl.addEventListener("mouseleave", () => {
-                    gsap.to(cardEl, {
-                        y: 0,
-                        scale: 1,
-                        boxShadow: "0 0 0 0 rgba(0, 0, 0, 0)",
-                        duration: 0.5,
-                        ease: "elastic.out(1, 0.5)",
-                    });
-
-                    if (iconContainer) {
-                        gsap.to(iconContainer, {
-                            scale: 1,
-                            rotation: 0,
-                            duration: 0.4,
-                            ease: "power2.out",
-                        });
-                    }
-
-                    if (arrowBtn) {
-                        gsap.to(arrowBtn, {
-                            x: 10,
-                            opacity: 0,
-                            duration: 0.3,
-                        });
-                    }
-
-                    if (statEl) {
-                        gsap.to(statEl, {
-                            scale: 1,
-                            duration: 0.3,
-                        });
-                    }
-                });
-            });
         }, section);
 
         return () => ctx.revert();
     }, []);
 
+    const getBentoClass = (index: number) => {
+        // Pattern: Big (Dark), Small, Small, Big (Dark) ...
+        if (index === 0 || index === 3 || index === 6) {
+            return "md:col-span-2 md:row-span-2 min-h-[400px]"; 
+        }
+        return "md:col-span-1 md:row-span-1 min-h-[320px]";
+    };
+
     return (
         <section
             ref={sectionRef}
-            className="w-full py-24 md:py-32 px-4 md:px-10 lg:px-40 bg-white dark:bg-[#0f180c] relative overflow-hidden"
+            className="w-full py-16 md:py-32 px-4 md:px-10 lg:px-20 bg-slate-50 relative"
             id="services"
         >
-            {/* Animated Background */}
-            <div className="absolute inset-0 pointer-events-none">
-                {/* Gradient orbs */}
-                <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-[#49e619]/8 rounded-full blur-[150px] animate-pulse" />
-                <div className="absolute -bottom-40 -right-40 w-[400px] h-[400px] bg-[#49e619]/5 rounded-full blur-[120px]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#49e619]/3 rounded-full blur-[200px]" />
-
-                {/* Grid pattern */}
-                <div
-                    className="absolute inset-0 opacity-[0.03]"
-                    style={{
-                        backgroundImage: `radial-gradient(circle at 1px 1px, #49e619 1px, transparent 0)`,
-                        backgroundSize: '40px 40px',
-                    }}
-                />
-            </div>
-
-            <div className="max-w-[1400px] mx-auto relative z-10">
-                {/* Header */}
-                <div
-                    ref={headerRef}
-                    className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-16 md:mb-20 gap-8"
-                >
+            <div className="max-w-[1600px] mx-auto">
+                <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
                     <div className="max-w-2xl">
-                        <div className="header-anim inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#49e619]/10 border border-[#49e619]/20 mb-6">
-                            <Sparkles className="w-4 h-4 text-[#49e619]" />
-                            <span className="text-[#49e619] text-xs font-bold uppercase tracking-wider">
-                                Our Expertise
-                            </span>
-                        </div>
-                        <h2 className="header-anim text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white mb-6 leading-tight">
-                            Services We{" "}
-                            <span className="relative">
-                                <span className="text-[#49e619]">Deliver</span>
-                                <svg
-                                    className="absolute -bottom-2 left-0 w-full"
-                                    viewBox="0 0 200 12"
-                                    fill="none"
-                                >
-                                    <path
-                                        d="M2 8C50 4 150 4 198 8"
-                                        stroke="#49e619"
-                                        strokeWidth="4"
-                                        strokeLinecap="round"
-                                        strokeDasharray="200"
-                                        strokeDashoffset="200"
-                                        className="animate-draw-line"
-                                    />
-                                </svg>
-                            </span>
+                        <span className="block text-black text-sm font-bold uppercase tracking-wider mb-6">
+                            Our Expertise
+                        </span>
+                        <h2 className="text-5xl md:text-7xl font-bold text-slate-900 leading-[0.95] tracking-tighter">
+                            Engineering <br />
+                            <span className="text-slate-400">Excellence.</span>
                         </h2>
-                        <p className="header-anim text-slate-600 dark:text-slate-400 text-lg md:text-xl leading-relaxed">
-                            From concept to deployment, we craft digital solutions that scale with your business.
-                            Our team of experts delivers excellence across every technology domain.
-                        </p>
                     </div>
-
-                    <a
-                        href="#contact"
-                        className="header-anim group flex items-center gap-3 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold text-base hover:bg-[#49e619] hover:text-[#0f180c] transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-[#49e619]/20"
-                    >
-                        Start a Project
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </a>
+                    <p className="text-xl text-slate-500 max-w-md leading-relaxed">
+                        We don&apos;t just write code. We architect scalable, future-proof digital ecosystems.
+                    </p>
                 </div>
 
-                {/* Bento Grid Layout */}
                 <div
                     ref={gridRef}
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
+                    className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8"
                 >
-                    {extendedServices.map((service, index) => {
-                        return (
-                            <div
+                    {services.map((service, index) => {
+                         // Feature specific cards as Dark Mode
+                         const isDark = index === 0 || index === 3 || index === 6;
+
+                         return (
+                            <TiltCard 
                                 key={index}
-                                className="service-card group relative rounded-3xl bg-slate-50 dark:bg-[#1a2c15] border border-slate-200 dark:border-[#2c4724] overflow-hidden cursor-pointer"
-                                onMouseMove={(e) => handleMouseMove(e, index)}
-                                onMouseLeave={() => setActiveCard(null)}
+                                className={cn(getBentoClass(index), "shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-slate-300/50 transition-shadow duration-500")}
+                                isDark={isDark}
                             >
-                                {/* Spotlight Effect */}
-                                {activeCard === index && (
-                                    <div
-                                        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-                                        style={{
-                                            background: `radial-gradient(400px circle at ${mousePosition.x}px ${mousePosition.y}px, ${service.color}15, transparent 60%)`,
-                                        }}
-                                    />
-                                )}
-
-                                {/* Animated border gradient */}
-                                <div
-                                    className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                                    style={{
-                                        background: `linear-gradient(135deg, ${service.color}20, transparent, ${service.color}10)`,
-                                    }}
-                                />
-
-                                <div className="relative p-6 md:p-8 h-full flex flex-col min-h-[240px]">
-                                    {/* Top Row: Icon + Stat */}
-                                    <div className="flex items-start justify-between mb-6">
-                                        {/* Icon Container */}
-                                        <div
-                                            className="icon-container service-icon relative"
-                                        >
-                                            <div
-                                                className="size-14 md:size-16 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-lg"
-                                                style={{
-                                                    backgroundColor: `${service.color}15`,
-                                                    boxShadow: `0 10px 30px -10px ${service.color}30`,
-                                                }}
-                                            >
-                                                <service.icon
-                                                    className="w-7 h-7 md:w-8 md:h-8"
-                                                    style={{ color: service.color }}
-                                                />
-                                            </div>
-                                            {/* Glow ring */}
-                                            <div
-                                                className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"
-                                                style={{ backgroundColor: `${service.color}30` }}
-                                            />
-                                        </div>
-
-                                        {/* Stat Badge */}
-                                        <div
-                                            className="stat-badge px-3 py-1.5 rounded-full text-xs font-bold opacity-70 group-hover:opacity-100 transition-all duration-300"
-                                            style={{
-                                                backgroundColor: `${service.color}15`,
-                                                color: service.color,
-                                            }}
-                                        >
-                                            {service.stat}
-                                        </div>
+                                <div className="flex justify-between items-start mb-8">
+                                    <div className={cn(
+                                        "w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110",
+                                        isDark ? "bg-white/10 text-white" : "bg-black text-white"
+                                    )}>
+                                        <service.icon className="w-7 h-7" />
                                     </div>
-
-                                    {/* Content */}
-                                    <div className="flex-1">
-                                        <h3
-                                            className="font-bold text-slate-900 dark:text-white mb-3 group-hover:translate-x-1 transition-transform duration-300 text-lg md:text-xl"
-                                        >
-                                            {service.title}
-                                        </h3>
-                                        <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-6 text-sm">
-                                            {service.description}
-                                        </p>
-
-                                        {/* Tech Tags */}
-                                        <div className="flex flex-wrap gap-2">
-                                            {service.tags?.map((tag, tagIndex) => (
-                                                <span
-                                                    key={tagIndex}
-                                                    className="service-tag px-3 py-1 rounded-full text-xs font-medium bg-white dark:bg-[#0f180c] border border-slate-200 dark:border-[#2c4724] text-slate-600 dark:text-slate-400 group-hover:border-slate-300 dark:group-hover:border-[#3d5a33] transition-colors duration-300"
-                                                >
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
+                                    
+                                    <div className={cn(
+                                        "w-10 h-10 rounded-full border flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-y-4 group-hover:translate-y-0 transition-all duration-300",
+                                        isDark ? "border-white/20 text-white bg-white/10" : "border-slate-200 text-black bg-white"
+                                    )}>
+                                        <ArrowUpRight className="w-5 h-5" />
                                     </div>
-
-                                    {/* Arrow Button */}
-                                    <div
-                                        className="arrow-btn absolute bottom-6 right-6 md:bottom-8 md:right-8 opacity-0 translate-x-4"
-                                    >
-                                        <div
-                                            className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors duration-300"
-                                            style={{
-                                                backgroundColor: service.color,
-                                            }}
-                                        >
-                                            <ArrowUpRight className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                                        </div>
-                                    </div>
-
-                                    {/* Corner decoration */}
-                                    <div
-                                        className="absolute top-0 right-0 w-24 h-24 opacity-10 group-hover:opacity-20 transition-opacity duration-500"
-                                        style={{
-                                            background: `radial-gradient(circle at 100% 0%, ${service.color}, transparent 70%)`,
-                                        }}
-                                    />
                                 </div>
 
-                                {/* Animated border on hover */}
-                                <div
-                                    className="absolute inset-0 rounded-3xl pointer-events-none transition-all duration-500"
-                                    style={{
-                                        boxShadow: `inset 0 0 0 2px transparent`,
-                                    }}
-                                >
-                                    <div
-                                        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                                        style={{
-                                            boxShadow: `inset 0 0 0 2px ${service.color}30`,
-                                        }}
-                                    />
+                                <div className="mt-auto">
+                                    <h3 className={cn(
+                                        "text-3xl font-bold mb-4 tracking-tight group-hover:translate-x-1 transition-transform duration-300",
+                                        isDark ? "text-white" : "text-slate-900"
+                                    )}>
+                                        {service.title}
+                                    </h3>
+                                    <p className={cn(
+                                        "text-base leading-relaxed max-w-xs",
+                                        isDark ? "text-slate-400" : "text-slate-500"
+                                    )}>
+                                        {service.description}
+                                    </p>
                                 </div>
-                            </div>
+                            </TiltCard>
                         );
                     })}
                 </div>
-
-                {/* Bottom CTA */}
-                <div className="mt-16 text-center">
-                    <p className="text-slate-500 dark:text-slate-400 mb-6">
-                        Can't find what you're looking for?{" "}
-                        <a href="#contact" className="text-[#49e619] font-bold hover:underline">
-                            Let's discuss your custom needs
-                        </a>
-                    </p>
-                </div>
             </div>
-
-            {/* Custom CSS */}
-            <style jsx>{`
-        @keyframes draw-line {
-          to {
-            stroke-dashoffset: 0;
-          }
-        }
-        .animate-draw-line {
-          animation: draw-line 1.5s ease-out forwards;
-          animation-delay: 0.8s;
-        }
-      `}</style>
         </section>
     );
 }

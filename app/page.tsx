@@ -13,7 +13,7 @@ import { PageTransition, ScrollProgress } from "@/components/animations";
 export default function HomePage() {
   return (
     <PageTransition>
-      <div className="dark bg-[#f6f8f6] dark:bg-[#152111] text-slate-900 dark:text-white overflow-x-hidden">
+      <div className="bg-white text-slate-900 overflow-x-hidden">
         <ScrollProgress />
         <Navbar />
         <HeroAnimated />

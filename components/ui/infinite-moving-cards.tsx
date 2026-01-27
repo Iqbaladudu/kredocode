@@ -11,8 +11,10 @@ export const InfiniteMovingCards = ({
     className,
 }: {
     items: {
+        quote: string;
         name: string;
         title: string;
+        avatar: string;
     }[];
     direction?: "left" | "right";
     speed?: "fast" | "normal" | "slow";
@@ -22,11 +24,37 @@ export const InfiniteMovingCards = ({
     const containerRef = React.useRef<HTMLDivElement>(null);
     const scrollerRef = React.useRef<HTMLUListElement>(null);
 
-    useEffect(() => {
-        addAnimation();
-    }, []);
     const [start, setStart] = useState(false);
-    function addAnimation() {
+
+    const getDirection = React.useCallback(() => {
+        if (containerRef.current) {
+            if (direction === "left") {
+                containerRef.current.style.setProperty(
+                    "--animation-direction",
+                    "forwards"
+                );
+            } else {
+                containerRef.current.style.setProperty(
+                    "--animation-direction",
+                    "reverse"
+                );
+            }
+        }
+    }, [direction]);
+
+    const getSpeed = React.useCallback(() => {
+        if (containerRef.current) {
+            if (speed === "fast") {
+                containerRef.current.style.setProperty("--animation-duration", "20s");
+            } else if (speed === "normal") {
+                containerRef.current.style.setProperty("--animation-duration", "40s");
+            } else {
+                containerRef.current.style.setProperty("--animation-duration", "80s");
+            }
+        }
+    }, [speed]);
+
+    const addAnimation = React.useCallback(() => {
         if (containerRef.current && scrollerRef.current) {
             const scrollerContent = Array.from(scrollerRef.current.children);
 
@@ -41,60 +69,47 @@ export const InfiniteMovingCards = ({
             getSpeed();
             setStart(true);
         }
-    }
-    const getDirection = () => {
-        if (containerRef.current) {
-            if (direction === "left") {
-                containerRef.current.style.setProperty(
-                    "--animation-direction",
-                    "forwards"
-                );
-            } else {
-                containerRef.current.style.setProperty(
-                    "--animation-direction",
-                    "reverse"
-                );
-            }
-        }
-    };
-    const getSpeed = () => {
-        if (containerRef.current) {
-            if (speed === "fast") {
-                containerRef.current.style.setProperty("--animation-duration", "20s");
-            } else if (speed === "normal") {
-                containerRef.current.style.setProperty("--animation-duration", "40s");
-            } else {
-                containerRef.current.style.setProperty("--animation-duration", "80s");
-            }
-        }
-    };
+    }, [getDirection, getSpeed]); // Added dependencies
+
+    useEffect(() => {
+        addAnimation();
+    }, [addAnimation]);
     return (
         <div
             ref={containerRef}
             className={cn(
-                "scroller relative z-20  max-w-7xl overflow-hidden  [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]",
+                "scroller relative z-20 w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_5%,white_95%,transparent)] md:[mask-image:linear-gradient(to_right,transparent,white_10%,white_90%,transparent)]",
                 className
             )}
         >
             <ul
                 ref={scrollerRef}
                 className={cn(
-                    " flex min-w-full shrink-0 gap-4 py-4 w-max flex-nowrap",
+                    " flex min-w-full shrink-0 gap-4 md:gap-8 py-4 w-max flex-nowrap",
                     start && "animate-scroll ",
                     pauseOnHover && "hover:[animation-play-state:paused]"
                 )}
             >
                 {items.map((item, idx) => (
                     <li
-                        className="w-[150px] max-w-full relative rounded-2xl border border-b-0 flex-shrink-0 border-slate-200 px-8 py-6 md:w-[250px] bg-slate-50"
-                        key={item.name}
+                        className="w-[280px] md:w-[450px] max-w-full relative rounded-2xl border border-slate-200 px-6 py-6 md:px-8 md:py-8 bg-white shadow-sm flex flex-col justify-between"
+                        key={idx}
                     >
-                        <span className=" text-sm leading-[1.6] text-slate-800 font-bold font-outfit text-center block">
-                            {item.name}
-                        </span>
-                        <span className=" text-xs leading-[1.6] text-slate-500 font-normal text-center block">
-                            {item.title}
-                        </span>
+                        <blockquote className="relative z-20">
+                            <span className="relative z-20 text-lg leading-[1.6] text-slate-800 font-medium italic mb-6 block">
+                                &quot;{item.quote}&quot;
+                            </span>
+                            <div className="relative z-20 mt-6 flex flex-row items-center gap-4">
+                                <span className="flex flex-col gap-1">
+                                    <span className=" text-base leading-[1.6] text-slate-900 font-bold">
+                                        {item.name}
+                                    </span>
+                                    <span className=" text-sm leading-[1.6] text-slate-500 font-normal">
+                                        {item.title}
+                                    </span>
+                                </span>
+                            </div>
+                        </blockquote>
                     </li>
                 ))}
             </ul>
