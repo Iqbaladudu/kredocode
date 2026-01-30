@@ -19,8 +19,8 @@ export default function HomePage() {
         <HeroAnimated />
         <Services />
         <Process />
-        <Projects />
-        <Testimonials />
+        {/* <Projects /> */}
+        {/* <Testimonials /> */}
         <CTA />
         <Footer />
       </div>
