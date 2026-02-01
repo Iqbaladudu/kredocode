@@ -27,11 +27,10 @@ export function Navbar() {
 
   return (
     <nav
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-        isScrolled
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled
           ? "bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-100"
           : "bg-white"
-      }`}
+        }`}
     >
       <div className="mx-auto px-4 md:px-8 lg:px-16">
         <div className="flex items-center justify-between h-16 md:h-20">
@@ -86,9 +85,9 @@ export function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <button className="mt-3 h-12 px-6 bg-black text-white rounded-lg font-bold text-base hover:bg-slate-800 transition-colors">
+            {/* <button className="mt-3 h-12 px-6 bg-black text-white rounded-lg font-bold text-base hover:bg-slate-800 transition-colors">
               Get Quote
-            </button>
+            </button> */}
           </div>
         </div>
       )}

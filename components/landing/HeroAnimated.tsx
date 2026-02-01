@@ -7,6 +7,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { usePageTransition } from "@/components/animations";
 import { MagneticButton, TiltCard } from "@/components/animations";
+import { redirect } from "next/navigation";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -160,17 +161,17 @@ export function HeroAnimated() {
             className="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto justify-center lg:justify-start"
           >
             <MagneticButton strength={0.3}>
-              <button className="h-12 md:h-14 px-8 md:px-10 bg-black text-white rounded-full font-semibold text-sm md:text-base transition-all hover:bg-slate-800 flex items-center justify-center gap-2 group shadow-xl shadow-black/10 w-full sm:w-auto">
+              <button className="h-12 md:h-14 px-8 md:px-10 bg-black text-white rounded-full font-semibold text-sm md:text-base transition-all hover:bg-slate-800 flex items-center justify-center gap-2 group shadow-xl shadow-black/10 w-full sm:w-auto" onClick={() => redirect("https://wa.me/6281288209603")}>
                 Start a Project
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </MagneticButton>
-            <MagneticButton strength={0.3}>
+            {/* <MagneticButton strength={0.3}>
               <button className="h-12 md:h-14 px-8 md:px-10 bg-white border border-slate-200 text-slate-900 rounded-full font-semibold text-sm md:text-base transition-all hover:bg-slate-50 flex items-center justify-center gap-2 group hover:border-slate-300 w-full sm:w-auto">
                 <Play className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
                 Showreel
               </button>
-            </MagneticButton>
+            </MagneticButton> */}
           </div>
 
           {/* Stats */}
